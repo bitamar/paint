@@ -5,13 +5,15 @@ import Konva from "konva";
 export type Line = { points: number[]; tool: string };
 
 export default function Canvas({
-  lines,
-  setLines,
+  myLines,
+  setMyLines,
+  sharedLines,
 }: {
-  lines: Line[];
-  setLines: (lines: Line[]) => void;
+  myLines: Line[];
+  setMyLines: (lines: Line[]) => void;
+  sharedLines: Line[];
 }) {
-  const [tool, setTool] = useState("pen");
+  const [tool] = useState("pen");
 
   const isDrawing = useRef(false);
 
@@ -21,7 +23,7 @@ export default function Canvas({
     const point = stage.getPointerPosition();
     if (!point) return;
     isDrawing.current = true;
-    setLines([...lines, { tool, points: [point.x, point.y] }]);
+    setMyLines([...myLines, { tool, points: [point.x, point.y] }]);
   };
 
   const mouseMove = (event: Konva.KonvaEventObject<MouseEvent>) => {
@@ -31,14 +33,14 @@ export default function Canvas({
     if (!stage) return;
     const point = stage.getPointerPosition();
     if (!point) return;
-    const lastLine = lines[lines.length - 1];
+    const lastLine = myLines[myLines.length - 1];
     // add point
     lastLine.points = lastLine.points.concat([point.x, point.y]);
 
     // replace last
-    lines.splice(lines.length - 1, 1, lastLine);
+    myLines.splice(myLines.length - 1, 1, lastLine);
 
-    setLines(lines.concat());
+    setMyLines(myLines.concat());
   };
 
   const mouseUp = () => {
@@ -46,7 +48,7 @@ export default function Canvas({
 
     isDrawing.current = false;
 
-    const lastLine = lines[lines.length - 1];
+    const lastLine = myLines[myLines.length - 1];
     sendLine(lastLine);
   };
 
@@ -68,7 +70,7 @@ export default function Canvas({
       style={{ cursor: "crosshair" }}
     >
       <Layer>
-        {lines.map((line, i) => (
+        {[...sharedLines, ...myLines].map((line, i) => (
           <Line
             key={i}
             points={line.points}

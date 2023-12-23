@@ -11,7 +11,8 @@ const Canvas = dynamic(() => import("./canvas"), {
 });
 
 export default function Board() {
-  const [lines, setLines] = useState<Line[]>([]);
+  const [sharedLines, setSharedLines] = useState<Line[]>([]);
+  const [myLines, setMyLines] = useState<Line[]>([]);
 
   useEffect(() => {
     const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
@@ -20,7 +21,7 @@ export default function Board() {
     const channel = pusher.subscribe("test-channel");
 
     channel.bind("add-line", function ({ line }: { line: Line }) {
-      setLines((_lines) => [..._lines, line]);
+      setSharedLines((_lines) => [..._lines, line]);
     });
 
     return () => {
@@ -32,7 +33,11 @@ export default function Board() {
 
   return (
     <div>
-      <Canvas lines={lines} setLines={setLines} />
+      <Canvas
+        sharedLines={sharedLines}
+        myLines={myLines}
+        setMyLines={setMyLines}
+      />
     </div>
   );
 }
