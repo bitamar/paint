@@ -3,17 +3,24 @@
 import { useEffect, useState } from "react";
 import Pusher from "pusher-js";
 
+import dynamic from "next/dynamic";
+import { Line } from "@/app/canvas";
+
+const Canvas = dynamic(() => import("./canvas"), {
+  ssr: false,
+});
+
 export default function Board() {
-  const [title, setTitle] = useState("init");
-  const [message, setMessage] = useState("");
+  const [lines, setLines] = useState<Line[]>([]);
 
   useEffect(() => {
     const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
       cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
     });
     const channel = pusher.subscribe("test-channel");
-    channel.bind("message", function ({ message }: { message: string }) {
-      setTitle(message);
+
+    channel.bind("add-line", function ({ line }: { line: Line }) {
+      setLines((_lines) => [..._lines, line]);
     });
 
     return () => {
@@ -23,23 +30,9 @@ export default function Board() {
     };
   }, []);
 
-  const submit = async () => {
-    console.log("submit", message);
-    await fetch("/api/action", {
-      body: JSON.stringify({ message }),
-      method: "post",
-    });
-    setMessage("");
-  };
-
   return (
     <div>
-      <p>{title}</p>
-      <input
-        value={message}
-        onChange={({ target }) => setMessage(target.value)}
-        onKeyDown={({ code }) => code == "Enter" && submit()}
-      />
+      <Canvas lines={lines} setLines={setLines} />
     </div>
   );
 }

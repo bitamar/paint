@@ -14,9 +14,14 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       useTLS: true,
     });
 
+    if (!body.line) {
+      res.status(500).json({ status: "error" });
+      return;
+    }
+
     pusher
-      .trigger("test-channel", "message", {
-        message: body.message,
+      .trigger("test-channel", "add-line", {
+        line: body.line,
       })
       .then(() => {
         res.status(200).json({ status: "ok" });
