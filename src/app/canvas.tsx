@@ -37,7 +37,7 @@ export default function Canvas({
 
     // replace last
     lines.splice(lines.length - 1, 1, lastLine);
-    console.log("here", { l: lines, con: lines.concat() });
+
     setLines(lines.concat());
   };
 
@@ -65,6 +65,7 @@ export default function Canvas({
       onMousemove={mouseMove}
       onMouseup={mouseUp}
       onMouseLeave={mouseUp}
+      style={{ cursor: "crosshair" }}
     >
       <Layer>
         {lines.map((line, i) => (
