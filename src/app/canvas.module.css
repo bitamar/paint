@@ -1,0 +1,16 @@
+.buttons {
+  position: absolute;
+  z-index: 10;
+}
+
+.button {
+  font-size: 20px;
+  margin: 1px;
+  border: 1px solid;
+  background-color: #bdb8b8;
+  padding: 5px;
+}
+
+.pressed {
+  background-color: #8c9ad5;
+}
