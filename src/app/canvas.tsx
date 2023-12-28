@@ -1,62 +1,71 @@
 import { useRef, useState } from "react";
-import { Layer, Line, Stage } from "react-konva";
+import { Layer, Stage, Line } from "react-konva";
 import Konva from "konva";
 import styles from "./canvas.module.css";
-
-export type Line = { points: number[]; tool: string; width: number };
+import { colors, createLine, Line as TLine, Tool } from "@/app/utils";
 
 export default function Canvas({
   myLines,
   setMyLines,
   sharedLines,
 }: {
-  myLines: Line[];
-  setMyLines: (lines: Line[]) => void;
-  sharedLines: Line[];
+  myLines: TLine[];
+  setMyLines: (lines: TLine[]) => void;
+  sharedLines: TLine[];
 }) {
-  const [tool, setTool] = useState("pen");
+  const [tool, setTool] = useState<Tool>("pen");
 
-  const isDrawing = useRef(false);
+  const [color, setColor] = useState(colors[0]);
+
+  const layer = useRef<Konva.Layer>(null);
+
+  // if (layer.current) {
+  // const canvas = layer.current.canvas;
+  // console.log(canvas.context.getImageData(0, 0, 100, 100));
+  // }
+
+  const currentUuid = useRef("");
 
   const mouseDown = (event: Konva.KonvaEventObject<MouseEvent>) => {
     const stage = event.target.getStage();
     if (!stage) return;
     const point = stage.getPointerPosition();
     if (!point) return;
-    isDrawing.current = true;
-    setMyLines([
-      ...myLines,
-      { tool, points: [point.x, point.y], width: tool == "pen" ? 5 : 10 },
-    ]);
+    const newLine = createLine(point, tool, color);
+    currentUuid.current = newLine.uuid;
+    setMyLines([...myLines, newLine]);
   };
 
   const mouseMove = (event: Konva.KonvaEventObject<MouseEvent>) => {
     // no drawing - skipping
-    if (!isDrawing.current) return;
+    if (!currentUuid.current) return;
     const stage = event.target.getStage();
     if (!stage) return;
     const point = stage.getPointerPosition();
     if (!point) return;
-    const lastLine = myLines[myLines.length - 1];
+    const currentLine = myLines.find(({ uuid }) => uuid == currentUuid.current);
+    if (!currentLine) return;
     // add point
-    lastLine.points = lastLine.points.concat([point.x, point.y]);
+    currentLine.points = currentLine.points.concat([point.x, point.y]);
 
     // replace last
-    myLines.splice(myLines.length - 1, 1, lastLine);
+    myLines.splice(myLines.length - 1, 1, currentLine);
 
     setMyLines(myLines.concat());
   };
 
   const mouseUp = () => {
-    if (!isDrawing.current) return;
+    if (!currentUuid.current) return;
 
-    isDrawing.current = false;
+    const currentLine = myLines.find(({ uuid }) => uuid == currentUuid.current);
+    if (!currentLine) return;
 
-    const lastLine = myLines[myLines.length - 1];
-    sendLine(lastLine);
+    sendLine(currentLine);
+
+    currentUuid.current = "";
   };
 
-  const sendLine = async (line: Line) => {
+  const sendLine = async (line: TLine) => {
     await fetch("/api/line", {
       body: JSON.stringify({ line }),
       method: "post",
@@ -73,6 +82,14 @@ export default function Canvas({
           pen
         </button>
         <button
+          onClick={() => setTool("shape")}
+          className={`${styles.button} ${
+            tool == "shape" ? styles.pressed : ""
+          }`}
+        >
+          shape
+        </button>
+        <button
           onClick={() => setTool("eraser")}
           className={`${styles.button} ${
             tool == "eraser" ? styles.pressed : ""
@@ -80,6 +97,19 @@ export default function Canvas({
         >
           eraser
         </button>
+
+        <div className={styles.settings}>
+          {colors.map((_color) => (
+            <button
+              key={_color}
+              className={`${styles.button} ${styles.colorButton} ${
+                color == _color ? styles.pressed : ""
+              }`}
+              style={{ backgroundColor: _color }}
+              onClick={() => setColor(_color)}
+            ></button>
+          ))}
+        </div>
       </div>
       <Stage
         width={window.innerWidth}
@@ -90,12 +120,14 @@ export default function Canvas({
         onMouseLeave={mouseUp}
         style={{ cursor: "crosshair" }}
       >
-        <Layer>
+        <Layer ref={layer}>
           {[...sharedLines, ...myLines].map((line, i) => (
             <Line
+              closed={line.closed}
+              fill={line.color}
               key={i}
               points={line.points}
-              stroke="#df4b26"
+              stroke={line.color}
               strokeWidth={line.width}
               tension={0.5}
               lineCap="round"

@@ -6,11 +6,18 @@
 .button {
   font-size: 20px;
   margin: 1px;
-  border: 1px solid;
+  border: 3px solid;
   background-color: #bdb8b8;
   padding: 5px;
+  cursor: pointer;
+}
+
+.colorButton {
+  width: 26px;
+  height: 26px;
 }
 
 .pressed {
   background-color: #8c9ad5;
+  border-color: #8c9ad5;
 }
