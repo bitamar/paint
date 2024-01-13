@@ -1,10 +1,14 @@
 import Konva from "konva";
 
 export const colors = [
-  "#3f2424",
   "#d93807",
-  "#fd6f0c",
+  "#3f2424",
+  "#775237",
   "#dfb726",
+  "#f6cec9",
+  "#eea38c",
+  "#a66d5b",
+  "#fd6f0c",
   "#9b9999",
   "#f4f4f4",
   "#0eef0e",
