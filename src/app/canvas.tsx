@@ -4,6 +4,16 @@ import Konva from "konva";
 import styles from "./canvas.module.css";
 import { colors, createLine, Line as TLine, Tool } from "@/app/utils";
 
+function hexToRgb(hex: string) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(
+        result[3],
+        16,
+      )}`
+    : null;
+}
+
 export default function Canvas({
   myLines,
   setMyLines,
@@ -16,6 +26,8 @@ export default function Canvas({
   const [tool, setTool] = useState<Tool>("pen");
 
   const [color, setColor] = useState(colors[0]);
+
+  const [opacity, setOpacity] = useState(1);
 
   const layer = useRef<Konva.Layer>(null);
 
@@ -31,7 +43,7 @@ export default function Canvas({
     if (!stage) return;
     const point = stage.getPointerPosition();
     if (!point) return;
-    const newLine = createLine(point, tool, color);
+    const newLine = createLine(point, tool, color, opacity);
     currentUuid.current = newLine.uuid;
     setMyLines([...myLines, newLine]);
   };
@@ -99,16 +111,33 @@ export default function Canvas({
         </button>
 
         <div className={styles.settings}>
-          {colors.map((_color) => (
-            <button
-              key={_color}
-              className={`${styles.button} ${styles.colorButton} ${
-                color == _color ? styles.pressed : ""
-              }`}
-              style={{ backgroundColor: _color }}
-              onClick={() => setColor(_color)}
-            ></button>
-          ))}
+          {(tool == "pen" || tool == "shape") && (
+            <div>
+              <div>
+                {colors.map((_color) => (
+                  <button
+                    key={_color}
+                    className={`${styles.button} ${styles.colorButton} ${
+                      color == _color ? styles.pressed : ""
+                    }`}
+                    style={{
+                      backgroundColor: `rgba(${hexToRgb(_color)}, ${opacity})`,
+                    }}
+                    onClick={() => setColor(_color)}
+                  ></button>
+                ))}
+              </div>
+
+              <input
+                type="range"
+                min={0}
+                max={1}
+                value={opacity}
+                step={0.01}
+                onChange={({ target }) => setOpacity(parseFloat(target.value))}
+              />
+            </div>
+          )}
         </div>
       </div>
       <Stage
@@ -135,6 +164,7 @@ export default function Canvas({
               globalCompositeOperation={
                 line.tool === "eraser" ? "destination-out" : "source-over"
               }
+              opacity={line.opacity}
             />
           ))}
         </Layer>

@@ -6,9 +6,7 @@ import Pusher from "pusher-js";
 import dynamic from "next/dynamic";
 import { Line } from "@/app/utils";
 
-const Canvas = dynamic(() => import("./canvas"), {
-  ssr: false,
-});
+const Canvas = dynamic(() => import("./canvas"), { ssr: false });
 
 export default function Board() {
   const [sharedLines, setSharedLines] = useState<Line[]>([]);
@@ -16,8 +14,8 @@ export default function Board() {
 
   useEffect(() => {
     const addLine = ({ line }: { line: Line }) => {
-      setSharedLines((_lines) => {
-        const updatedSharedLines = [..._lines, line];
+      setSharedLines((lines) => {
+        const updatedSharedLines = [...lines, line];
 
         // Removing lines from myLine in case they are either the new line or already added; When adding many lines quickly
         // some lines can get stuck in myLines when only the new line is filtered here.

@@ -2,6 +2,7 @@ import Konva from "konva";
 
 export const colors = [
   "#d93807",
+  "#4f0505",
   "#3f2424",
   "#775237",
   "#dfb726",
@@ -26,6 +27,7 @@ export type Line = {
   width: number;
   color: string;
   closed: boolean;
+  opacity: number;
 };
 
 export type Tool = "pen" | "shape" | "eraser";
@@ -36,7 +38,12 @@ const toolWidth: { [t in Tool]: number } = {
   eraser: 12,
 };
 
-export function createLine(point: Konva.Vector2d, tool: Tool, color: string) {
+export function createLine(
+  point: Konva.Vector2d,
+  tool: Tool,
+  color: string,
+  opacity: number,
+) {
   return {
     uuid: crypto.randomUUID(),
     tool,
@@ -44,5 +51,6 @@ export function createLine(point: Konva.Vector2d, tool: Tool, color: string) {
     width: toolWidth[tool],
     color,
     closed: tool == "shape",
+    opacity,
   };
 }
